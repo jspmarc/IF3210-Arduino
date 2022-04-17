@@ -18,10 +18,10 @@
 #define KEYPAD_R2 4
 #define KEYPAD_R3 3
 #define KEYPAD_R4 2
-#define KEYPAD_C1 A2
-#define KEYPAD_C2 A3
-#define KEYPAD_C3 A4
-#define KEYPAD_C4 A5
+#define KEYPAD_C1 A0
+#define KEYPAD_C2 A1
+#define KEYPAD_C3 A2
+#define KEYPAD_C4 A3
 #define KEYPAD_ROW_COUNT 4
 #define KEYPAD_COL_COUNT 4
 #define DOOR_PIN 6
@@ -74,7 +74,7 @@ bool input_started = false;
 bool locked = false;
 
 int starting_time = 0;
-/// value is 10 <= max_input_time <= 99
+/// value is 1 <= var <= 99
 int max_locked_time = 10;
 int max_input_time = 15;
 
@@ -134,7 +134,7 @@ void loop()
             lcd.setCursor(0, 1);
 			// write current time to LCD and then wait for 1 sec
             char s[6];
-            sprintf(s, "%02d/%d", cur_time - starting_time, max_locked_time);
+            sprintf(s, "%02d/%02d", cur_time - starting_time, max_locked_time);
             lcd.print(s);
 			delay(1000);
         } else {
@@ -163,7 +163,7 @@ void loop()
 			// create the string to write
 			// 2 digits current time + '/' + 2 digits max time + '\0' (6 chars)
 			char s[6];
-			sprintf(s, "%02d/%d", sec, max_input_time);
+			sprintf(s, "%02d/%02d", sec, max_input_time);
 			// print to LCD
 			lcd.print(s);
 			// ready LCD to print input
