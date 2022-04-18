@@ -1,5 +1,5 @@
 // C++ code
-// Worker Arduino (actuator)
+// Master Arduino (actuator)
 #include <LiquidCrystal.h>
 #include <Keypad.h>
 #include <Servo.h>
