@@ -26,6 +26,14 @@
 #define KEYPAD_COL_COUNT 4
 #define DOOR_PIN 6
 
+enum states {
+	LOCKED,
+	UNLOCKED,
+	INCORRECT,
+	INPUTTING,
+	WAIT,
+};
+
 // global variable setup
 // \b is ASCII for backspace while * will be used for reset
 char keypad_keys[KEYPAD_ROW_COUNT][KEYPAD_COL_COUNT] = {
@@ -70,8 +78,7 @@ String correct_password = "5698";
 String inputted = "";
 
 // states
-bool input_started = false;
-bool locked = false;
+states state = WAIT;
 
 int starting_time = 0;
 /// value is 1 <= var <= 99
@@ -89,13 +96,13 @@ void setup()
 	pinMode(LCD_PIN_DB7, OUTPUT);
 	pinMode(LCD_PIN_V0, OUTPUT);
 
-	pinMode(KEYPAD_R1, INPUT);
-	pinMode(KEYPAD_R2, INPUT);
-	pinMode(KEYPAD_R3, INPUT);
-	pinMode(KEYPAD_R4, INPUT);
-	pinMode(KEYPAD_C1, INPUT);
-	pinMode(KEYPAD_C2, INPUT);
-	pinMode(KEYPAD_C3, INPUT);
+	pinMode(KEYPAD_R1, INPUTTING);
+	pinMode(KEYPAD_R2, INPUTTING);
+	pinMode(KEYPAD_R3, INPUTTING);
+	pinMode(KEYPAD_R4, INPUTTING);
+	pinMode(KEYPAD_C1, INPUTTING);
+	pinMode(KEYPAD_C2, INPUTTING);
+	pinMode(KEYPAD_C3, INPUTTING);
 
 	pinMode(DOOR_PIN, OUTPUT);
 
@@ -114,6 +121,7 @@ void setup()
 	door.write(0);
 
 	Serial.begin(9600);
+	Wire.begin();
 
 	delay(250);
 	// clear "boot screen"
@@ -122,8 +130,7 @@ void setup()
 
 void loop()
 {
-
-	if (locked) {
+	if (state == LOCKED) {
 		// if the device is locked, check current time
 		int cur_time = millis() / 1000;
 		// then, write locked message to first row
@@ -131,21 +138,21 @@ void loop()
 		lcd.print("LOCKED");
 		if (cur_time - starting_time < max_locked_time) {
 			// if curent time is smaller than starting time + max_locked_time,
-            lcd.setCursor(0, 1);
+			lcd.setCursor(0, 1);
 			// write current time to LCD and then wait for 1 sec
-            char s[6];
-            sprintf(s, "%02d/%02d", cur_time - starting_time, max_locked_time);
-            lcd.print(s);
+			char s[6];
+			sprintf(s, "%02d/%02d", cur_time - starting_time, max_locked_time);
+			lcd.print(s);
 			delay(1000);
-        } else {
+		} else {
 			// else, unlock the device
-            locked = false;
-        }
-		// after both, return from loop()
-		return;
+			state = WAIT;
+		}
+	// after both, return from loop()
+	return;
 	}
 
-	if (input_started) {
+	if (state == INPUTTING) {
 		// if input has already started, count passed seconds
 		int sec = millis() / 1000 - starting_time;
 		if (sec >= max_input_time) {
@@ -153,8 +160,7 @@ void loop()
 			// 1. set starting time to now
 			// 2. set locked to true
 			starting_time = millis() / 1000;
-			locked = true;
-			input_started = false;
+			state = LOCKED;
 			lcd.clear();
 		} else {
 			// else, write time to LCD
@@ -181,16 +187,16 @@ void loop()
 	char key = keypad.getKey();
 	// check for inputted key
 	if (key) {
-		if (!input_started && key == 'A') {
+		if (state != INPUTTING && key == 'A') {
 			// set state to input_started when A is pressed and input has not started
-			input_started = true;
+			state = INPUTTING;
 			// get starting time
 			starting_time = millis() / 1000;
 			// clear the LCD
 			lcd.clear();
 			// then prompt the user to enter password
 			lcd_prompt_enter_password();
-		} else if (input_started) {
+		} else if (state == INPUTTING) {
 			// if state is already input started, check for other possibilities
 			switch (key) {
 			case '\b':
@@ -259,7 +265,7 @@ void lcd_prompt_enter_password()
 /**
  * A procedure to start the unlocked subroutine, which will:
  * 1. reset the inputted string
- * 2. reset the state to input_started = false
+ * 2. set state to unlocked
  * 3. clear the LCD then write unlocked message
  * 4. opens the door
  * 5. clear the LCD when the door closes
@@ -268,19 +274,28 @@ void start_unlocked_subroutine()
 {
 	// reset state
 	inputted = "";
-	input_started = false;
+	state = UNLOCKED;
 
 	// print "UNLOCKED" to the LCD
 	lcd.clear();
 	lcd.setCursor(0, 0);
 	lcd.print("UNLOCKED");
 
+	Wire.beginTransmission(1);
+	Wire.write(1);
+	Serial.println("Sent 1");
+	Wire.endTransmission();
+
 	// open the door for 1 sec
 	door.write(90);
-	delay(1000);
+	delay(10000);
 	// close the door after 1 sec
 	door.write(0);
 
+	Wire.beginTransmission(1);
+	Wire.write(0);
+	Serial.println("Sent 0");
+	Wire.endTransmission();
 	lcd.clear();
 }
 
