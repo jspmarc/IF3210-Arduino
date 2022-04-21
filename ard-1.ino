@@ -163,10 +163,14 @@ void loop()
 	Wire.requestFrom(2, 1);
 	if (Wire.available()) {
 		bool door_open = Wire.read();
-		if (door_open)
+		if (door_open) {
 			start_opened_subroutine();
+			return;
+		}
 
 	}
+
+	// at this point, the state is either WAIT or INPUTTING
 
 	if (state == INPUTTING) {
 		// if input has already started, count passed seconds
