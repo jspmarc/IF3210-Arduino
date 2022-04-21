@@ -149,7 +149,7 @@ void loop()
 			// check previous state, if it was opened send signal
 			// to slave arduino to change state to closed
 			if (state == OPENED)
-				end_unlocked_subroutine();
+				end_opened_subroutine();
 
 			state = WAIT;
 		}
@@ -160,11 +160,11 @@ void loop()
 
 	// ask arduino 1 whether the door is
 	// opened by the button or not
-	Wire.requestFrom(1, 1);
+	Wire.requestFrom(2, 1);
 	if (Wire.available()) {
 		bool door_open = Wire.read();
 		if (door_open)
-			start_unlocked_subroutine();
+			start_opened_subroutine();
 
 	}
 
@@ -241,7 +241,7 @@ void loop()
 					// inputted is the same as the length of the correct password.
 					if (inputted.length() == correct_password.length()) {
 						if (inputted == correct_password)
-							start_unlocked_subroutine();
+							start_opened_subroutine();
 						else
 							start_incorrect_passwd_subroutine();
 					}
@@ -286,7 +286,7 @@ void lcd_prompt_enter_password()
  * 4. send signal to slave arduino to change state to opened
  * 5. opens the door
  */
-void start_unlocked_subroutine()
+void start_opened_subroutine()
 {
 	// reset state
 	inputted = "";
@@ -300,7 +300,7 @@ void start_unlocked_subroutine()
 	lcd.setCursor(0, 0);
 	lcd.print("UNLOCKED");
 
-	Wire.beginTransmission(1);
+	Wire.beginTransmission(2);
 	Wire.write(1);
 	Wire.endTransmission();
 
@@ -315,7 +315,7 @@ void start_unlocked_subroutine()
  * 3. closes the door
  * 4. send signal to slave arduino to change state to opened
  */
-void end_unlocked_subroutine()
+void end_opened_subroutine()
 {
 	state = WAIT;
 
@@ -323,7 +323,7 @@ void end_unlocked_subroutine()
 
 	door.write(0);
 
-	Wire.beginTransmission(1);
+	Wire.beginTransmission(2);
 	Wire.write(0);
 	Wire.endTransmission();
 	lcd.clear();

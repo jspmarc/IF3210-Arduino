@@ -30,7 +30,7 @@ void setup()
 
 	Serial.begin(9600);
 
-	Wire.begin(1);
+	Wire.begin(2);
 	Wire.onReceive(receive_ev);
 	Wire.onRequest(request_ev);
 }
@@ -41,6 +41,7 @@ void loop()
 	byte pir_out_reading = digitalRead(PIR_OUT_PIN);
 	byte button_reading = digitalRead(BUTTON_PIN);
 
+	// if button is pressed, send signal to arduino 1
 	if (button_reading == LOW) {
 		door_open = true;
 	}
