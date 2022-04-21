@@ -50,11 +50,16 @@ void loop()
 	if (door_open) {
 		// delay is needed to avoid counting the same person twice
 		if (pir_enter_reading == HIGH && pir_out_reading == LOW) {
+			// someone entered the room
 			people_counter++;
-			delay(1200);
 		} else if (pir_enter_reading == LOW && pir_out_reading == HIGH) {
+			// someone left the room
 			people_counter = people_counter > 0 ? people_counter - 1 : 0;
-			delay(1200);
+		}
+
+		if (pir_enter_reading == HIGH || pir_out_reading == HIGH) {
+			// if someone entered or left, the door should be closed
+			door_open = false;
 		}
 	}
 

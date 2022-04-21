@@ -134,7 +134,7 @@ void loop()
 		int cur_time = millis() / 1000;
 		// then, write locked message to first row
 		lcd.setCursor(0, 0);
-		lcd.print(state == LOCKED ? "LOCKED" : "UNLOCKED");
+		lcd.print(state == OPENED ? "UNLOCKED" : "LOCKED");
 		if (cur_time - starting_time < max_locked_time) {
 			// if curent time is smaller than starting time + max_locked_time,
 			lcd.setCursor(0, 1);
@@ -142,7 +142,18 @@ void loop()
 			char s[6];
 			sprintf(s, "%02d/%02d", cur_time - starting_time, max_locked_time);
 			lcd.print(s);
-			delay(1000);
+
+			Wire.requestFrom(2, 1);
+			// check whether need to close the door when state is opened
+			if (Wire.available()) {
+				bool door_open = Wire.read();
+				if (state == OPENED && !door_open)
+					end_opened_subroutine();
+				else if (state == LOCKED && door_open)
+					start_opened_subroutine();
+
+				return;
+			}
 		} else {
 			// else, unlock the device
 			lcd.clear();
@@ -154,6 +165,7 @@ void loop()
 			state = WAIT;
 		}
 
+		delay(100);
 		// after both, return from loop()
 		return;
 	}
@@ -167,7 +179,6 @@ void loop()
 			start_opened_subroutine();
 			return;
 		}
-
 	}
 
 	// at this point, the state is either WAIT or INPUTTING
