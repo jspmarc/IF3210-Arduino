@@ -46,15 +46,19 @@ void loop()
 		door_open = true;
 	}
 
+	// update people counter when the door is open
 	if (door_open) {
+		// delay is needed to avoid counting the same person twice
 		if (pir_enter_reading == HIGH && pir_out_reading == LOW) {
 			people_counter++;
-			delay(1500);
+			delay(1200);
 		} else if (pir_enter_reading == LOW && pir_out_reading == HIGH) {
 			people_counter = people_counter > 0 ? people_counter - 1 : 0;
 			delay(1200);
 		}
 	}
+
+	// turn on  light if people are inside
 	digitalWrite(LED_BUILTIN, people_counter > 0);
 	
 
