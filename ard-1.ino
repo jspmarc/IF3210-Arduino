@@ -95,13 +95,13 @@ void setup()
 	pinMode(LCD_PIN_DB7, OUTPUT);
 	pinMode(LCD_PIN_V0, OUTPUT);
 
-	pinMode(KEYPAD_R1, INPUTTING);
-	pinMode(KEYPAD_R2, INPUTTING);
-	pinMode(KEYPAD_R3, INPUTTING);
-	pinMode(KEYPAD_R4, INPUTTING);
-	pinMode(KEYPAD_C1, INPUTTING);
-	pinMode(KEYPAD_C2, INPUTTING);
-	pinMode(KEYPAD_C3, INPUTTING);
+	pinMode(KEYPAD_R1, INPUT);
+	pinMode(KEYPAD_R2, INPUT);
+	pinMode(KEYPAD_R3, INPUT);
+	pinMode(KEYPAD_R4, INPUT);
+	pinMode(KEYPAD_C1, INPUT);
+	pinMode(KEYPAD_C2, INPUT);
+	pinMode(KEYPAD_C3, INPUT);
 
 	pinMode(DOOR_PIN, OUTPUT);
 
