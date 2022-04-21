@@ -1,5 +1,5 @@
 // C++ code
-// Master Arduino (actuator)
+// 1st Arduino (1st worker)
 #include <LiquidCrystal.h>
 #include <Keypad.h>
 #include <Servo.h>
@@ -26,10 +26,9 @@
 #define KEYPAD_COL_COUNT 4
 #define DOOR_PIN 6
 
-enum states {
+enum States {
 	LOCKED,
-	UNLOCKED,
-	INCORRECT,
+	OPENED,
 	INPUTTING,
 	WAIT,
 };
@@ -78,7 +77,7 @@ String correct_password = "5698";
 String inputted = "";
 
 // states
-states state = WAIT;
+States state = WAIT;
 
 int starting_time = 0;
 /// value is 1 <= var <= 99
@@ -130,12 +129,12 @@ void setup()
 
 void loop()
 {
-	if (state == LOCKED) {
+	if (state == LOCKED || state == OPENED) {
 		// if the device is locked, check current time
 		int cur_time = millis() / 1000;
 		// then, write locked message to first row
 		lcd.setCursor(0, 0);
-		lcd.print("LOCKED");
+		lcd.print(state == LOCKED ? "LOCKED" : "UNLOCKED");
 		if (cur_time - starting_time < max_locked_time) {
 			// if curent time is smaller than starting time + max_locked_time,
 			lcd.setCursor(0, 1);
@@ -146,10 +145,27 @@ void loop()
 			delay(1000);
 		} else {
 			// else, unlock the device
+			lcd.clear();
+			// check previous state, if it was opened send signal
+			// to slave arduino to change state to closed
+			if (state == OPENED)
+				end_unlocked_subroutine();
+
 			state = WAIT;
 		}
-	// after both, return from loop()
-	return;
+
+		// after both, return from loop()
+		return;
+	}
+
+	// ask arduino 1 whether the door is
+	// opened by the button or not
+	Wire.requestFrom(1, 1);
+	if (Wire.available()) {
+		bool door_open = Wire.read();
+		if (door_open)
+			start_unlocked_subroutine();
+
 	}
 
 	if (state == INPUTTING) {
@@ -265,16 +281,19 @@ void lcd_prompt_enter_password()
 /**
  * A procedure to start the unlocked subroutine, which will:
  * 1. reset the inputted string
- * 2. set state to unlocked
+ * 2. set state to opened
  * 3. clear the LCD then write unlocked message
- * 4. opens the door
- * 5. clear the LCD when the door closes
+ * 4. send signal to slave arduino to change state to opened
+ * 5. opens the door
  */
 void start_unlocked_subroutine()
 {
 	// reset state
 	inputted = "";
-	state = UNLOCKED;
+	state = OPENED;
+
+	// set starting time of unlocked
+	starting_time = millis() / 1000;
 
 	// print "UNLOCKED" to the LCD
 	lcd.clear();
@@ -283,18 +302,29 @@ void start_unlocked_subroutine()
 
 	Wire.beginTransmission(1);
 	Wire.write(1);
-	Serial.println("Sent 1");
 	Wire.endTransmission();
 
 	// open the door for 1 sec
 	door.write(90);
-	delay(10000);
-	// close the door after 1 sec
+}
+
+/**
+ * A procedure to start the unlocked subroutine, which will:
+ * 1. set state to wait
+ * 2. clear the LCD
+ * 3. closes the door
+ * 4. send signal to slave arduino to change state to opened
+ */
+void end_unlocked_subroutine()
+{
+	state = WAIT;
+
+	lcd.clear();
+
 	door.write(0);
 
 	Wire.beginTransmission(1);
 	Wire.write(0);
-	Serial.println("Sent 0");
 	Wire.endTransmission();
 	lcd.clear();
 }
@@ -323,4 +353,3 @@ void start_incorrect_passwd_subroutine()
 	lcd.clear();
 	lcd_prompt_enter_password();
 }
-
