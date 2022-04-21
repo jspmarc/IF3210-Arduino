@@ -41,8 +41,9 @@ void loop()
 	byte pir_out_reading = digitalRead(PIR_OUT_PIN);
 	byte button_reading = digitalRead(BUTTON_PIN);
 
-	// if button is pressed, send signal to arduino 1
-	if (button_reading == LOW) {
+	// if button is pressed and people are inside,
+	// send signal to arduino 1 to open door
+	if (button_reading == LOW && people_counter > 0) {
 		door_open = true;
 	}
 

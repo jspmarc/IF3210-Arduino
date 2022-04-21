@@ -151,8 +151,6 @@ void loop()
 					end_opened_subroutine();
 				else if (state == LOCKED && door_open)
 					start_opened_subroutine();
-
-				return;
 			}
 		} else {
 			// else, unlock the device
@@ -165,7 +163,7 @@ void loop()
 			state = WAIT;
 		}
 
-		delay(100);
+		delay(500);
 		// after both, return from loop()
 		return;
 	}
