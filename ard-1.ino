@@ -180,6 +180,16 @@ void loop()
 		}
 	}
 
+	// ask arduino 3 whether the password
+	// has been changed or not
+	Wire.requestFrom(3, 5);
+	if (Wire.available() == 5) {
+		bool changed = Wire.read();
+		for (int i = 0; changed && i < correct_password.length(); ++i) {
+			correct_password[i] = (char)Wire.read();
+		}
+	}
+
 	// at this point, the state is either WAIT or INPUTTING
 	if (state == INPUTTING) {
 		// if input has already started, count passed seconds
