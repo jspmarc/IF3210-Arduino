@@ -27,9 +27,10 @@
 #define DOOR_PIN 6
 
 enum States {
+	CHANGING,
+	INPUTTING,
 	LOCKED,
 	OPENED,
-	INPUTTING,
 	WAIT,
 };
 
@@ -180,7 +181,6 @@ void loop()
 	}
 
 	// at this point, the state is either WAIT or INPUTTING
-
 	if (state == INPUTTING) {
 		// if input has already started, count passed seconds
 		int sec = millis() / 1000 - starting_time;
